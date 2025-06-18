@@ -1,0 +1,12 @@
+/* index.css - Clean version for Bootstrap */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+  /* Bootstrap's light bg */
+  font-family: Arial, sans-serif;
+}

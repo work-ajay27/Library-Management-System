@@ -1,0 +1,12 @@
+/* App.css (cleaned for Bootstrap use) */
+
+body {
+  margin: 0px;
+  padding: 0px;
+  background-color: #f8f9fa; /* Light background */
+  font-family: Arial, sans-serif;
+}
+
+#root {
+  padding: 2rem;
+}
