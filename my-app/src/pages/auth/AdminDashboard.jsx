@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,6 +11,13 @@ const AdminDashboard = () => {
     });
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
+
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem("isLoggedIn");
+        navigate("/login");
+    };
 
     const fetchBooks = async () => {
         try {
@@ -70,11 +78,18 @@ const AdminDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">📚 Admin Dashboard</h1>
-                <button className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+                <button
+                    onClick={handleLogout}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                >
+                    Logout
+                </button>
             </div>
 
+            {/* Add/Edit Book Form */}
             <div className="bg-white p-6 rounded shadow mb-8">
                 <h2 className="text-xl font-semibold mb-4">{isEditing ? "Edit Book" : "Add Book"}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -86,18 +101,22 @@ const AdminDashboard = () => {
                         className="border rounded px-3 py-2" />
                     <input name="year" type="number" placeholder="Publish Year" value={formBook.year} onChange={handleChange}
                         className="border rounded px-3 py-2" />
-                    <button onClick={handleSubmit} className={`px-4 py-2 rounded text-white ${isEditing ? 'bg-blue-500' : 'bg-green-500'}`}>
+                    <button
+                        onClick={handleSubmit}
+                        className={`px-4 py-2 rounded text-white ${isEditing ? 'bg-blue-500' : 'bg-green-500'}`}
+                    >
                         {isEditing ? "Update" : "Add"}
                     </button>
                 </div>
             </div>
 
+            {/* Book List */}
             <div className="bg-white p-6 rounded shadow">
                 <h2 className="text-xl font-semibold mb-4">Books List</h2>
                 <table className="w-full table-auto text-left border-collapse">
                     <thead>
                         <tr className="bg-gray-100 text-gray-700">
-                            <th className="p-3">Name</th>
+                            <th className="p-3">Title</th>
                             <th className="p-3">Author</th>
                             <th className="p-3">Price</th>
                             <th className="p-3">Year</th>

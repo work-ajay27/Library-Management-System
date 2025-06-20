@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function StudentDashboard() {
     const [books, setBooks] = useState([]);
     const [borrowedBooks, setBorrowedBooks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
+        if (!user) {
+            navigate("/login");
+            return;
+        }
         fetchBooks();
         fetchBorrowedBooks();
     }, []);
 
     const fetchBooks = async () => {
         try {
-            const res = await axios.get("http://localhost:8080/api/books");
+            const res = await axios.get("http://localhost:8080/api/book/retrive");
             setBooks(res.data);
         } catch (err) {
             console.error("Error fetching books:", err);
@@ -23,7 +29,7 @@ function StudentDashboard() {
 
     const fetchBorrowedBooks = async () => {
         try {
-            const res = await axios.get(`http://localhost:8080/api/books/borrowed?studentId=${user.id}`);
+            const res = await axios.get(`http://localhost:8080/api/book/borrowed?studentId=${user.id}`);
             setBorrowedBooks(res.data);
         } catch (err) {
             console.error("Error fetching borrowed books:", err);
@@ -32,7 +38,7 @@ function StudentDashboard() {
 
     const handleBorrow = async (bookId) => {
         try {
-            await axios.post(`http://localhost:8080/api/books/borrow?bookId=${bookId}&studentId=${user.id}`);
+            await axios.post(`http://localhost:8080/api/book/borrow?bookId=${bookId}&studentId=${user.id}`);
             alert("Book borrowed successfully!");
             fetchBooks();
             fetchBorrowedBooks();
@@ -44,7 +50,7 @@ function StudentDashboard() {
 
     const handleReturn = async (bookId) => {
         try {
-            await axios.post(`http://localhost:8080/api/books/return?bookId=${bookId}&studentId=${user.id}`);
+            await axios.post(`http://localhost:8080/api/book/return?bookId=${bookId}&studentId=${user.id}`);
             alert("Book returned!");
             fetchBooks();
             fetchBorrowedBooks();
@@ -56,7 +62,7 @@ function StudentDashboard() {
 
     const handleLogout = () => {
         localStorage.removeItem("user");
-        window.location.href = "/";
+        navigate("/login");
     };
 
     const filteredBooks = books.filter(book =>
@@ -67,9 +73,9 @@ function StudentDashboard() {
         <div className="min-h-screen bg-gray-100">
             {/* Navbar */}
             <nav className="bg-white shadow p-4 flex justify-between items-center">
-                <div className="text-xl font-bold text-gray-800">📚 LMS - Student Dashboard</div>
+                <div className="text-xl font-bold text-gray-800">🎓 LMS - Student Dashboard</div>
                 <div className="flex items-center space-x-4">
-                    <span className="text-gray-600">{user.email}</span>
+                    <span className="text-gray-600">{user?.email}</span>
                     <button
                         onClick={handleLogout}
                         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
@@ -79,6 +85,7 @@ function StudentDashboard() {
                 </div>
             </nav>
 
+            {/* Search */}
             <div className="p-6">
                 <div className="mb-6">
                     <input
@@ -90,6 +97,7 @@ function StudentDashboard() {
                     />
                 </div>
 
+                {/* Book Sections */}
                 <div className="grid md:grid-cols-2 gap-8">
                     {/* Available Books */}
                     <div className="bg-white p-6 rounded shadow">
@@ -97,20 +105,24 @@ function StudentDashboard() {
                             📚 Available Books
                         </h3>
                         <ul className="space-y-3">
-                            {filteredBooks.map((book) => (
-                                <li
-                                    key={book.id}
-                                    className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
-                                >
-                                    <span className="font-medium text-gray-700">{book.title}</span>
-                                    <button
-                                        onClick={() => handleBorrow(book.id)}
-                                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                            {filteredBooks.length === 0 ? (
+                                <p className="text-gray-500">No books available.</p>
+                            ) : (
+                                filteredBooks.map((book) => (
+                                    <li
+                                        key={book.id}
+                                        className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
                                     >
-                                        Borrow
-                                    </button>
-                                </li>
-                            ))}
+                                        <span className="font-medium text-gray-700">{book.title}</span>
+                                        <button
+                                            onClick={() => handleBorrow(book.id)}
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                                        >
+                                            Borrow
+                                        </button>
+                                    </li>
+                                ))
+                            )}
                         </ul>
                     </div>
 
@@ -120,20 +132,24 @@ function StudentDashboard() {
                             📖 Your Borrowed Books
                         </h3>
                         <ul className="space-y-3">
-                            {borrowedBooks.map((book) => (
-                                <li
-                                    key={book.id}
-                                    className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
-                                >
-                                    <span className="font-medium text-gray-700">{book.title}</span>
-                                    <button
-                                        onClick={() => handleReturn(book.id)}
-                                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                            {borrowedBooks.length === 0 ? (
+                                <p className="text-gray-500">You haven't borrowed any books.</p>
+                            ) : (
+                                borrowedBooks.map((book) => (
+                                    <li
+                                        key={book.id}
+                                        className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
                                     >
-                                        Return
-                                    </button>
-                                </li>
-                            ))}
+                                        <span className="font-medium text-gray-700">{book.title}</span>
+                                        <button
+                                            onClick={() => handleReturn(book.id)}
+                                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                                        >
+                                            Return
+                                        </button>
+                                    </li>
+                                ))
+                            )}
                         </ul>
                     </div>
                 </div>
