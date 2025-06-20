@@ -5,9 +5,11 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const AdminDashboard = () => {
     const [books, setBooks] = useState([]);
-    const [newBook, setNewBook] = useState({
+    const [formBook, setFormBook] = useState({
         title: "", author: "", price: "", year: ""
     });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editId, setEditId] = useState(null);
 
     const fetchBooks = async () => {
         try {
@@ -19,17 +21,25 @@ const AdminDashboard = () => {
     };
 
     const handleChange = (e) => {
-        setNewBook({ ...newBook, [e.target.name]: e.target.value });
+        setFormBook({ ...formBook, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async () => {
         try {
-            await axios.post("http://localhost:8080/api/book/add", newBook);
-            toast.success("Book added successfully!");
-            setNewBook({ title: "", author: "", price: "", year: "" });
+            if (isEditing) {
+                await axios.put(`http://localhost:8080/api/book/update/${editId}`, formBook);
+                toast.success("Book updated!");
+            } else {
+                await axios.post("http://localhost:8080/api/book/add", formBook);
+                toast.success("Book added!");
+            }
+
+            setFormBook({ title: "", author: "", price: "", year: "" });
+            setIsEditing(false);
+            setEditId(null);
             fetchBooks();
         } catch (error) {
-            toast.error("Error adding book.");
+            toast.error("Error saving book.");
         }
     };
 
@@ -43,35 +53,45 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleEdit = (book) => {
+        setFormBook({
+            title: book.title,
+            author: book.author,
+            price: book.price,
+            year: book.year
+        });
+        setEditId(book.id);
+        setIsEditing(true);
+    };
+
     useEffect(() => {
         fetchBooks();
     }, []);
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
-            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">📚 Admin Dashboard</h1>
                 <button className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
             </div>
 
-            {/* Add Book Form */}
             <div className="bg-white p-6 rounded shadow mb-8">
-                <h2 className="text-xl font-semibold mb-4">Add / Edit Book</h2>
+                <h2 className="text-xl font-semibold mb-4">{isEditing ? "Edit Book" : "Add Book"}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <input name="title" placeholder="Title" value={newBook.title} onChange={handleChange}
+                    <input name="title" placeholder="Title" value={formBook.title} onChange={handleChange}
                         className="border rounded px-3 py-2" />
-                    <input name="author" placeholder="Author" value={newBook.author} onChange={handleChange}
+                    <input name="author" placeholder="Author" value={formBook.author} onChange={handleChange}
                         className="border rounded px-3 py-2" />
-                    <input name="price" type="number" placeholder="Price" value={newBook.price} onChange={handleChange}
+                    <input name="price" type="number" placeholder="Price" value={formBook.price} onChange={handleChange}
                         className="border rounded px-3 py-2" />
-                    <input name="year" type="number" placeholder="Publish Year" value={newBook.year} onChange={handleChange}
+                    <input name="year" type="number" placeholder="Publish Year" value={formBook.year} onChange={handleChange}
                         className="border rounded px-3 py-2" />
-                    <button onClick={handleSubmit} className="bg-green-500 text-white px-4 py-2 rounded">Add</button>
+                    <button onClick={handleSubmit} className={`px-4 py-2 rounded text-white ${isEditing ? 'bg-blue-500' : 'bg-green-500'}`}>
+                        {isEditing ? "Update" : "Add"}
+                    </button>
                 </div>
             </div>
 
-            {/* Book List Table */}
             <div className="bg-white p-6 rounded shadow">
                 <h2 className="text-xl font-semibold mb-4">Books List</h2>
                 <table className="w-full table-auto text-left border-collapse">
@@ -96,7 +116,13 @@ const AdminDashboard = () => {
                                     <td className="p-3">{book.author}</td>
                                     <td className="p-3">₹{book.price}</td>
                                     <td className="p-3">{book.year}</td>
-                                    <td className="p-3">
+                                    <td className="p-3 space-x-2">
+                                        <button
+                                            onClick={() => handleEdit(book)}
+                                            className="bg-blue-500 text-white px-3 py-1 rounded"
+                                        >
+                                            Edit
+                                        </button>
                                         <button
                                             onClick={() => handleDelete(book.id)}
                                             className="bg-red-500 text-white px-3 py-1 rounded"
